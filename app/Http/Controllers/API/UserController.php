@@ -14,7 +14,7 @@ class UserController extends Controller
         $validator = Validator::make($request->all(),
         [
             'name' => 'required|string',
-            'email' => 'required|string',
+            'email' => 'required|string|unique:users',
             'phone' => 'required|numeric',
             'password' => 'required|min:6'
         ]);
@@ -40,6 +40,13 @@ class UserController extends Controller
             $result = array(['status'=>false,'message'=>'Something went wrong','data'=>$user]);
             $responseCode=400; //bad request
         }
+        return response()->json($result,$responseCode);
+    }
+    public function getUsers()
+    {
+        $users = User::all();
+        $result = array(['status'=>true,'message'=> count($users).' users fetched','data'=>$users]);
+        $responseCode=200; //success
         return response()->json($result,$responseCode);
     }
 }
