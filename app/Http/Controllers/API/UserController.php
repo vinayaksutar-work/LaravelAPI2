@@ -91,7 +91,18 @@ class UserController extends Controller
         $user->save();
 
         $result = array(['status'=>true,'message'=>'User has been updated successfully','data'=>$user]);
-        $responseCode=200; //success
+        return response()->json($result,200);//success
+    }
+    public function deleteUser($id)
+    {
+        //get id
+        $user = User::find($id);
+        if (!$user)
+        {
+            return response()->json(['status'=>true,'message'=>'user not found'],404);
+        }
+        $user->delete();
+        $result = array(['status'=>true,'message'=>'User has been deleted successfully']);
         return response()->json($result,200);//success
     }
 }
