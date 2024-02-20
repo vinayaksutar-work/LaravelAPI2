@@ -15,7 +15,7 @@ class UserController extends Controller
         [
             'name' => 'required|string',
             'email' => 'required|string|unique:users',
-            'phone' => 'required|numeric',
+            'phone' => 'required|numeric|digits:10',
             'password' => 'required|min:6'
         ]);
         if($validator->fails())
@@ -62,5 +62,36 @@ class UserController extends Controller
             $responseCode=404; //not found
         }
         return response()->json($result,$responseCode);
+    }
+    public function updateUser(Request $request, $id)
+    {
+        //get id
+        $user = User::find($id);
+        if (!$user)
+        {
+            return response()->json(['status'=>true,'message'=>'user not found'],404);
+        }
+        //validation code
+        $validator = Validator::make($request->all(),
+        [
+            'name' => 'required|string',
+            'email' => 'required|string|email|unique:users,email,'.$id,
+            'phone' => 'required|numeric|digits:10'
+        ]);
+        if($validator->fails())
+        {
+            $result = array(['status'=>false,'message'=>'Validation error occured',
+            'error_message'=>$validator->errors()]);
+            return response()->json($result,400); //bad request
+        }
+
+        $user->name = $request->name;
+        $user->email = $request->email;
+        $user->phone = $request->phone;
+        $user->save();
+
+        $result = array(['status'=>true,'message'=>'User has been updated successfully','data'=>$user]);
+        $responseCode=200; //success
+        return response()->json($result,200);//success
     }
 }
