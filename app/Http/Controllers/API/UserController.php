@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Validator;
+use Exception;
+
 
 class UserController extends Controller
 {
@@ -44,10 +46,16 @@ class UserController extends Controller
     }
     public function getUsers()
     {
-        $users = User::all();
-        $result = array(['status'=>true,'message'=> count($users).' users fetched','data'=>$users]);
-        $responseCode=200; //success
-        return response()->json($result,$responseCode);
+        try {
+            $users = User::all();
+            $result = array(['status'=>true,'message'=> count($users).' users fetched','data'=>$users]);
+            $responseCode=200; //success
+            return response()->json($result,$responseCode);
+        } catch (Exception $e) {
+            $result = array('status' =>false, 'message' =>'API failed due to an error',
+            'error' =>$e->getMessage());
+            return response()->json($result,500);
+        }
     }
     public function getUserDetail($id)
     {
