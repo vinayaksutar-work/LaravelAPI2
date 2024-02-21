@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use Exception;
-
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
@@ -49,8 +49,7 @@ class UserController extends Controller
         try {
             $users = User::all();
             $result = array(['status'=>true,'message'=> count($users).' users fetched','data'=>$users]);
-            $responseCode=200; //success
-            return response()->json($result,$responseCode);
+            return response()->json($result,200);
         } catch (Exception $e) {
             $result = array('status' =>false, 'message' =>'API failed due to an error',
             'error' =>$e->getMessage());
@@ -112,5 +111,44 @@ class UserController extends Controller
         $user->delete();
         $result = array(['status'=>true,'message'=>'User has been deleted successfully']);
         return response()->json($result,200);//success
+    }
+    public function login(Request $request)
+    {
+        $validator = Validator::make($request->all(),
+        [
+            'email' => 'required',
+            'password' => 'required'
+        ]);
+        if($validator->fails())
+        {
+            return response()->json(['status'=>false,'message'=>'Validation error occured',
+            'error_message'=>$validator->errors()],400);
+        }
+
+        $credentials = $request->only('email', 'password');
+        if(Auth::attempt($credentials)){
+            $user = Auth::user();
+            ## Creating a token
+            $token = $user->createToken('MyApp')->accessToken;
+            return response()->json(['status'=>true,'message'=>'Login successful',
+            'token'=>$token],200);
+        }
+        return response()->json(['status'=>false,'message'=>'Invalid login credentials'],401);
+    }
+    //unauthenticate function
+    public function unauthenticate()
+    {
+        return response()->json(['status'=>false,'message'=>'only authorized users can be accessed',
+        'error'=>'unauthenticated'],401);
+    }
+    //logout function
+    public function Logout()
+    {
+        $user = Auth::user();
+        $user->tokens->each(function($token, $key){
+            $token->delete();
+        });
+        // $user = Auth::guard('api')->user();
+        return response()->json(['status'=>false,'message'=>'Logged out successfully','data'=>$user],200);
     }
 }
